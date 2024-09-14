@@ -34,7 +34,7 @@
     <script>
         let locationData = '';
         let tracking = false;
-        let intervalID = null;
+        let watchID = null;
 
         // Function to toggle location tracking on or off
         function toggleTracking() {
@@ -42,21 +42,18 @@
             document.getElementById('startStopBtn').innerHTML = tracking ? 'Stop Location Tracking' : 'Start Location Tracking';
 
             if (tracking) {
-                // Start the loop
+                // Start watching the position
                 getLocation();
-                intervalID = setInterval(getLocation, 10000); // Call every 10 seconds
+                if (navigator.geolocation) {
+                    watchID = navigator.geolocation.watchPosition(showPosition, showError, { maximumAge: 10000, timeout: 5000, enableHighAccuracy: true });
+                } else {
+                    document.getElementById('locationOutput').innerHTML = "Geolocation is not supported by this browser.";
+                }
             } else {
-                // Stop the loop
-                clearInterval(intervalID);
-            }
-        }
-
-        // Function to get the user's location
-        function getLocation() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(showPosition, showError);
-            } else {
-                document.getElementById('locationOutput').innerHTML = "Geolocation is not supported by this browser.";
+                // Stop watching the position
+                if (watchID) {
+                    navigator.geolocation.clearWatch(watchID);
+                }
             }
         }
 
