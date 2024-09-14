@@ -87,8 +87,9 @@
             const latitude = position.coords.latitude;
             const longitude = position.coords.longitude;
             const timestamp = new Date(position.timestamp);
-            const locationString = `Time: ${timestamp.toLocaleTimeString()}, Latitude: ${latitude}, Longitude: ${longitude}`;
-            
+            const timeString = timestamp.toLocaleTimeString();
+            const locationString = `Latitude: ${latitude}\nLongitude: ${longitude}\nTime: ${timeString}\n`;
+
             // Add to all locations array
             allLocations.push(locationString);
             
