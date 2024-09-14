@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Location Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .output {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Location Tracker</h1>
+    <button id="startStopBtn" onclick="toggleTracking()">Start Location Tracking</button>
+
+    <div class="output" id="locationOutput"></div>
+
+    <button id="downloadBtn" style="display:none;" onclick="downloadLocation()">Download Last Location</button>
+
+    <script>
+        let locationData = '';
+        let tracking = false;
+        let intervalID = null;
+
+        // Function to toggle location tracking on or off
+        function toggleTracking() {
+            tracking = !tracking;
+            document.getElementById('startStopBtn').innerHTML = tracking ? 'Stop Location Tracking' : 'Start Location Tracking';
+
+            if (tracking) {
+                // Start the loop
+                getLocation();
+                intervalID = setInterval(getLocation, 10000); // Call every 10 seconds
+            } else {
+                // Stop the loop
+                clearInterval(intervalID);
+            }
+        }
+
+        // Function to get the user's location
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(showPosition, showError);
+            } else {
+                document.getElementById('locationOutput').innerHTML = "Geolocation is not supported by this browser.";
+            }
+        }
+
+        // Show position on screen
+        function showPosition(position) {
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+            locationData = `Latitude: ${latitude}, Longitude: ${longitude}`;
+            
+            document.getElementById('locationOutput').innerHTML = locationData;
+            document.getElementById('downloadBtn').style.display = 'inline-block';
+        }
+
+        // Error handling
+        function showError(error) {
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    document.getElementById('locationOutput').innerHTML = "User denied the request for Geolocation.";
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    document.getElementById('locationOutput').innerHTML = "Location information is unavailable.";
+                    break;
+                case error.TIMEOUT:
+                    document.getElementById('locationOutput').innerHTML = "The request to get user location timed out.";
+                    break;
+                case error.UNKNOWN_ERROR:
+                    document.getElementById('locationOutput').innerHTML = "An unknown error occurred.";
+                    break;
+            }
+        }
+
+        // Function to download location as a text file
+        function downloadLocation() {
+            const blob = new Blob([locationData], { type: 'text/plain' });
+            const link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.download = 'location.txt';
+            link.click();
+        }
+    </script>
+
+</body>
+</html>
