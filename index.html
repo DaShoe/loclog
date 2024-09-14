@@ -19,22 +19,38 @@
         .output {
             margin-top: 20px;
             font-size: 18px;
+            white-space: pre-wrap;
         }
     </style>
 </head>
 <body>
 
     <h1>Location Tracker</h1>
-    <button id="startStopBtn" onclick="toggleTracking()">Start Location Tracking</button>
+    <button id="startStopBtn" onclick="checkPermissions()">Start Location Tracking</button>
 
     <div class="output" id="locationOutput"></div>
 
-    <button id="downloadBtn" style="display:none;" onclick="downloadLocation()">Download Last Location</button>
+    <button id="downloadBtn" style="display:none;" onclick="downloadLocation()">Download All Locations</button>
 
     <script>
-        let locationData = '';
         let tracking = false;
         let watchID = null;
+        let allLocations = []; // To store all location data
+
+        // Check if the browser has permission to access location
+        function checkPermissions() {
+            if (navigator.permissions) {
+                navigator.permissions.query({ name: 'geolocation' }).then(function(permissionStatus) {
+                    if (permissionStatus.state === 'denied') {
+                        document.getElementById('locationOutput').innerHTML = "Location access is denied. Please enable location access in your browser settings.";
+                    } else {
+                        toggleTracking();
+                    }
+                });
+            } else {
+                toggleTracking(); // For older browsers that don't support navigator.permissions
+            }
+        }
 
         // Function to toggle location tracking on or off
         function toggleTracking() {
@@ -45,7 +61,7 @@
                 // Start watching the position
                 getLocation();
                 if (navigator.geolocation) {
-                    watchID = navigator.geolocation.watchPosition(showPosition, showError, { maximumAge: 10000, timeout: 5000, enableHighAccuracy: true });
+                    watchID = navigator.geolocation.watchPosition(storePosition, showError, { maximumAge: 10000, timeout: 5000, enableHighAccuracy: true });
                 } else {
                     document.getElementById('locationOutput').innerHTML = "Geolocation is not supported by this browser.";
                 }
@@ -57,13 +73,29 @@
             }
         }
 
-        // Show position on screen
-        function showPosition(position) {
+        // Function to get the user's location
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(storePosition, showError);
+            } else {
+                document.getElementById('locationOutput').innerHTML = "Geolocation is not supported by this browser.";
+            }
+        }
+
+        // Store and display the position on screen
+        function storePosition(position) {
             const latitude = position.coords.latitude;
             const longitude = position.coords.longitude;
-            locationData = `Latitude: ${latitude}, Longitude: ${longitude}`;
+            const timestamp = new Date(position.timestamp);
+            const locationString = `Time: ${timestamp.toLocaleTimeString()}, Latitude: ${latitude}, Longitude: ${longitude}`;
             
-            document.getElementById('locationOutput').innerHTML = locationData;
+            // Add to all locations array
+            allLocations.push(locationString);
+            
+            // Display all locations
+            document.getElementById('locationOutput').innerHTML = allLocations.join("\n");
+
+            // Show the download button if not already visible
             document.getElementById('downloadBtn').style.display = 'inline-block';
         }
 
@@ -85,12 +117,12 @@
             }
         }
 
-        // Function to download location as a text file
+        // Function to download all locations as a text file
         function downloadLocation() {
-            const blob = new Blob([locationData], { type: 'text/plain' });
+            const blob = new Blob([allLocations.join("\n")], { type: 'text/plain' });
             const link = document.createElement('a');
             link.href = window.URL.createObjectURL(blob);
-            link.download = 'location.txt';
+            link.download = 'locations.txt';
             link.click();
         }
     </script>
