@@ -20,6 +20,8 @@
             margin-top: 20px;
             font-size: 18px;
             white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
         }
     </style>
 </head>
@@ -31,6 +33,7 @@
     <div class="output" id="locationOutput"></div>
 
     <button id="downloadBtn" style="display:none;" onclick="downloadLocation()">Download All Locations</button>
+    <button id="clearBtn" style="display:none;" onclick="clearLocations()">Clear All Locations</button>
 
     <script>
         let tracking = false;
@@ -88,7 +91,7 @@
             const longitude = position.coords.longitude;
             const timestamp = new Date(position.timestamp);
             const timeString = timestamp.toLocaleTimeString();
-            const locationString = `Latitude: ${latitude}\nLongitude: ${longitude}\nTime: ${timeString}\n`;
+            const locationString = `${latitude}\n${longitude}\n${timeString}\n`;
 
             // Add to all locations array
             allLocations.push(locationString);
@@ -96,8 +99,12 @@
             // Display all locations
             document.getElementById('locationOutput').innerHTML = allLocations.join("\n");
 
-            // Show the download button if not already visible
+            // Scroll to the bottom of the page after new location is added
+            autoScrollToBottom();
+
+            // Show the download and clear buttons if not already visible
             document.getElementById('downloadBtn').style.display = 'inline-block';
+            document.getElementById('clearBtn').style.display = 'inline-block';
         }
 
         // Error handling
@@ -118,13 +125,32 @@
             }
         }
 
-        // Function to download all locations as a text file
+        // Function to download all locations as a text file with dynamic date-based filename
         function downloadLocation() {
+            const date = new Date();
+            const dateString = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+            const filename = `location+${dateString}.txt`;
             const blob = new Blob([allLocations.join("\n")], { type: 'text/plain' });
             const link = document.createElement('a');
             link.href = window.URL.createObjectURL(blob);
-            link.download = 'locations.txt';
+            link.download = filename;
             link.click();
+        }
+
+        // Function to clear all tracked locations
+        function clearLocations() {
+            allLocations = []; // Clear the location array
+            document.getElementById('locationOutput').innerHTML = ""; // Clear the displayed locations
+            document.getElementById('downloadBtn').style.display = 'none'; // Hide the download button
+            document.getElementById('clearBtn').style.display = 'none'; // Hide the clear button
+        }
+
+        // Function to auto-scroll to the bottom of the page
+        function autoScrollToBottom() {
+            window.scrollTo({
+                top: document.body.scrollHeight,
+                behavior: 'smooth' // Optional: Adds a smooth scrolling animation
+            });
         }
     </script>
 
